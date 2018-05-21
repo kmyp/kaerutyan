@@ -6,23 +6,30 @@ Created on 2018/04/25
 import cv2
 import time
 import sys
+import netifaces
 import threading
 import os
-from datetime import date, datetime as dt
 from PyQt5 import QtCore, QtGui, QtWidgets
+from datetime import date, datetime as dt
 from PyQt5.QtGui import QFont,QColor
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFrame
 from PyQt5.QtWidgets import *
 from PyQt5.Qt import QPalette
-from PyQt5.uic.Compiler.qtproxies import QtCore, QtWidgets
+import subprocess
 
-class EnvChanger(QtWidgets.QFrame):
+class EnvChanger(QMainWindow):
     def __init__(self, parent=None,initials=None):
-        QtWidgets.QFrame.__init__(self)
+        QWidget.__init__(self)
         # variables
         self.font = QFont('Serif', 22, QFont.Light)
         self.ret_flg = False
+
+        self.env_num = 0
+
+        # Menu Bar
+        self.file_menu = self.menuBar().addMenu("&File")
+        self.file_menu.addMenu("Save")
+        self.file_menu.addMenu("Open")
 
         # status bar
         self.statusBar()
@@ -30,40 +37,40 @@ class EnvChanger(QtWidgets.QFrame):
 
         #env num
         self.lbl_fname = QLabel(self)
-        self.lbl_fname.setGeometry(20, 20, 200, 30)
+        self.lbl_fname.setGeometry(20, 30, 200, 30)
         self.lbl_fname.setFont(QFont("Serif", 18, QFont.Light))
         self.lbl_fname.setText("Env:")
         self.qle_id = QLineEdit(self)
-        self.qle_id.setGeometry(90, 20, 70, 30)
+        self.qle_id.setGeometry(90, 30, 70, 30)
         self.qle_id.setFont(QFont("Serif", 16, QFont.Light))
         self.qle_id.textChanged[str].connect(self.on_env_text_input)
 
         #delay
         self.lbl_fname = QLabel(self)
-        self.lbl_fname.setGeometry(20, 70, 200, 30)
+        self.lbl_fname.setGeometry(20, 80, 200, 30)
         self.lbl_fname.setFont(QFont("Serif", 18, QFont.Light))
         self.lbl_fname.setText("Delay:")
         self.qle_id = QLineEdit(self)
-        self.qle_id.setGeometry(90, 70, 70, 30)
+        self.qle_id.setGeometry(90, 80, 70, 30)
         self.qle_id.setFont(QFont("Serif", 16, QFont.Light))
-        self.qle_id.textChanged[str].connect(self.on_env_text_input)
+        self.qle_id.textChanged[str].connect(self.on_delay_text_input)
         self.lbl_fname = QLabel(self)
-        self.lbl_fname.setGeometry(165, 75, 240, 30)
+        self.lbl_fname.setGeometry(165, 85, 240, 30)
         self.lbl_fname.setFont(QFont("Serif", 14, QFont.Light))
         self.lbl_fname.setText("ms")
 
         #plr
         self.lbl_fname = QLabel(self)
-        self.lbl_fname.setGeometry(20, 120, 200, 30)
+        self.lbl_fname.setGeometry(20, 130, 200, 30)
         self.lbl_fname.setFont(QFont("Serif", 18, QFont.Light))
         self.lbl_fname.setText("plr:")
         self.qle_id = QLineEdit(self)
-        self.qle_id.setGeometry(90, 120, 70, 30)
+        self.qle_id.setGeometry(90, 130, 70, 30)
         self.qle_id.setFont(QFont("Serif", 16, QFont.Light))
-        self.qle_id.textChanged[str].connect(self.on_env_text_input)
+        self.qle_id.textChanged[str].connect(self.on_plr_text_input)
 
         self.lbl_fname = QLabel(self)
-        self.lbl_fname.setGeometry(165, 125, 240, 30)
+        self.lbl_fname.setGeometry(165, 135, 240, 30)
         self.lbl_fname.setFont(QFont("Serif", 14, QFont.Light))
         self.lbl_fname.setText("%")
 
@@ -74,21 +81,19 @@ class EnvChanger(QtWidgets.QFrame):
 
 
         self.env_list_table = QTableWidget(self)
-        self.env_list_table.setGeometry(240,10,230,210)
+        self.env_list_table.setGeometry(240,25,230,210)
         self.env_list_table.setColumnCount(1)
         self.env_list_table.setColumnWidth(0,231)
-        self.env_list_table.setRowCount(4)
         self.env_list_table.setRowHeight(100,15)
+        self.row_num = 0
 
-        self.env_list_table.setItem(0,0, QTableWidgetItem("Tom"))
-        self.env_list_table.setItem(1,0, QTableWidgetItem("Ken"))
-        self.env_list_table.setItem(2,0, QTableWidgetItem("Susie"))
-        self.env_list_table.setItem(3,0, QTableWidgetItem("Kevin"))
+        self.env_list = {}
+
 
         #remove header
 
-        item1 = QtWidgets.QTableWidgetItem('red')
-        item1.setBackground(QtGui.QColor(255, 0, 0))
+        item1 = QtWidgets.QTableWidgetItem('Environments')
+        item1.setBackground(QtGui.QColor(0, 255, 127))
         self.env_list_table.setHorizontalHeaderItem(0,item1)
 
         self.env_list_table.verticalHeader().hide()
@@ -108,37 +113,90 @@ class EnvChanger(QtWidgets.QFrame):
         btn = QPushButton("add", self)
         btn.setFont(QFont('Serif', 18, QFont.Light))
         btn.setStyleSheet("color : blue")
-        btn.setGeometry(30, 175, 70, 35)
+        btn.setGeometry(30, 185, 70, 35)
         btn.setEnabled(True)
         btn.clicked.connect(self.button_event_add)
         return btn
 
     def button_event_add(self):
-        print("hello")
+#         line = "【"+self.env_num+"】"+"  Delay:"+str(self.delay_num)+"ms  plr:"+str(int(self.plr_num)*100)+"%"
+        if self.env_num >= 0 and self.delay_num >= 0 and self.plr_num >= 0:
+            self.env_list[int(self.env_num)] = "delay "+str(self.delay_num)+"ms plr "+str(self.plr_num)
+
+            print(self.env_list[self.env_num])
+            self.env_list_table.setRowCount(len(self.env_list))
+            i = 0
+            for k,v in sorted(self.env_list.items(), key = lambda x:x[0]):
+                self.env_list_table.setItem(0, i, QTableWidgetItem("【"+str(k)+"】"+"  " + str(v)))
+                print(str(v))
+                i = i + 1
 
 
     def put_apply_button(self):
         btn = QPushButton("apply", self)
         btn.setFont(QFont('Serif', 18, QFont.Light))
         btn.setStyleSheet("color : red")
-        btn.setGeometry(110, 175, 70, 35)
+        btn.setGeometry(110, 185, 70, 35)
         btn.setEnabled(True)
         btn.clicked.connect(self.button_event_apply)
         return btn
 
     def button_event_apply(self):
-        print("hello")
+        try:
+            if len(self.env_list_table.selectedItems())>0:
+                cmd = self.env_list_table.selectedItems()[0].text().split("  ")
+                if len(cmd < 2):
+                    raise Exception("cmd error") #ToDo 例外上げる
+                print(cmd[1])
+                subprocess.check_call("ipfw pipe 773")
 
 
-    def on_env_text_input(self):
-        print("hello")
+        except Exception as e:
+            print(e)
+            qApp.quit()
 
+
+
+
+    def on_env_text_input(self,text):
+        print(text)
+        if text.isnumeric():
+            self.env_num = int(text)
+        else :
+            self.statusBar().showMessage("Invalid input:Env")
+            self.env_num = -1
+
+    def on_delay_text_input(self,text):
+        print(text)
+        if text.isnumeric():
+            self.delay_num = int(text)
+        else :
+            self.statusBar().showMessage("Invalid input:delay")
+            self.delay_num = -1
+
+    def on_plr_text_input(self,text):
+        print(text)
+        if text.isnumeric():
+            self.plr_num = int(text)/100
+        else :
+            self.statusBar().showMessage("Invalid input:plr")
+            self.plr_num = -1
 
 
 def create_main_window(argv):
-    app = QApplication(argv)
+    app = QtWidgets.QApplication(sys.argv)
+    app.setStyle(QtWidgets.QStyleFactory.create('Fusion')) # won't work on windows style.
     EC = EnvChanger()
-    sys.exit(app.exec_())
+    EC.show()
+    try:
+        app.exec_()
+
+    except Exception as e:
+        print(e)
+
 
 if __name__ == "__main__":
-    create_main_window(sys.argv)
+    if u'bridge773' in netifaces.interfaces():
+        create_main_window(sys.argv)
+    else:
+        print("ごめんね、、私はそんなに高性能じゃないから、bridge773の設定をしてから再度起動してください。。。")
