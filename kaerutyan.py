@@ -2,16 +2,15 @@
 Created on 2018/04/25
 last edit 2018/5/22
 @author: kim
-GUIベースで遅延とパケット損失を設定できる仕様
-bridge773があるかどうかは確認
-なければ起動しない
-
+GUI based ipfw controler
+check bridge773
+if not, won't run
 ###ToDo
-ファイルの入出力
-パイプやブリッジがもしなかったらの処理は暇なときにやる
+File input output
+implement function about pipe or bridge later
 
 
-実験環境カエルちゃん ver.0.1.0
+ExEnvKaerutyan ver.0.1.0
 
 '''
 import cv2
@@ -92,8 +91,6 @@ class EnvChanger(QMainWindow):
         self.apply_button = self.put_apply_button()
         self.delete_button = self.put_delete_button()
 
-
-
         self.env_list_table = QTableWidget(self)
         self.env_list_table.setGeometry(240,25,230,210)
         self.env_list_table.setColumnCount(1)
@@ -103,9 +100,6 @@ class EnvChanger(QMainWindow):
 
         self.env_list = {}
 
-
-        #remove header
-
         item1 = QtWidgets.QTableWidgetItem('Environments')
         item1.setBackground(QtGui.QColor(0, 255, 127))
         self.env_list_table.setHorizontalHeaderItem(0,item1)
@@ -113,10 +107,6 @@ class EnvChanger(QMainWindow):
         self.env_list_table.verticalHeader().hide()
         self.env_list_table.verticalHeader().setDefaultSectionSize(20)
         self.env_list_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-
-
-
 
         # size and title
         self.setGeometry(220, 220, 490, 280)
@@ -133,7 +123,6 @@ class EnvChanger(QMainWindow):
         return btn
 
     def button_event_add(self):
-#         line = "【"+self.env_num+"】"+"  Delay:"+str(self.delay_num)+"ms  plr:"+str(int(self.plr_num)*100)+"%"
         if self.env_num >= 0 and self.delay_num >= 0 and self.plr_num >= 0:
             self.env_list[int(self.env_num)] = "delay "+str(self.delay_num)+"ms plr "+str(self.plr_num)
 
@@ -160,7 +149,7 @@ class EnvChanger(QMainWindow):
             if len(self.env_list_table.selectedItems())>0:
                 cmd = self.env_list_table.selectedItems()[0].text().split("  ")
                 if len(cmd) < 2:
-                    raise Exception("cmd error") #ToDo 例外上げる
+                    raise Exception("cmd error")
                 print("ipfw pipe 773 config "+ cmd[1])
                 subprocess.check_call("ipfw pipe 773 config "+ cmd[1])
                 self.statusBar().showMessage("setting " + cmd[0])
@@ -169,8 +158,7 @@ class EnvChanger(QMainWindow):
                 print("please select environment")
 
         except Exception as e:
-            print("ipfwコマンドの実行に失敗しました。")
-            self.statusBar().showMessage("failed to excute ipfw")
+            self.statusBar().showMessage("failed to call ipfw")
             sub = SubWindow(self)
             sub.show()
 
@@ -191,7 +179,7 @@ class EnvChanger(QMainWindow):
             if len(self.env_list_table.selectedItems())>0:
                 cmd = self.env_list_table.selectedItems()[0].text().split("  ")
                 if len(cmd) < 2:
-                    raise Exception("faital error") #ToDo 例外上げる
+                    raise Exception("fatal error")
                 index = int(cmd[0].replace(".",""))
                 del self.env_list[index]
                 self.env_list_table.setRowCount(len(self.env_list))
@@ -207,7 +195,6 @@ class EnvChanger(QMainWindow):
         except Exception as e:
             print(e.message)
             qApp.quit()
-
 
     def on_env_text_input(self,text):
         if text.isnumeric():
@@ -229,7 +216,6 @@ class EnvChanger(QMainWindow):
         else :
             self.statusBar().showMessage("Invalid input:plr")
             self.plr_num = -1
-
 
 
 class SubWindow:
@@ -259,9 +245,6 @@ class SubWindow:
         self.w.exec_()
 
 
-
-
-
 def create_main_window(argv):
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle(QtWidgets.QStyleFactory.create('Fusion')) # won't work on windows style.
@@ -273,12 +256,10 @@ def create_main_window(argv):
     except Exception as e:
         print(e)
 
-
 if __name__ == "__main__":
-
-    print("実験環境カエルちゃんのバージョン0.0.1です。\n未実装な部分および未知のバグが多いので注意してください。\nブリッジとパイプは事前に手動で設定してください。\n\n")
+    print("This is Experiment Environment Changer ver.0.0.1. \n[NOTICE]Thre are many un impremented functions and unknown bugs \nConfigure gridge773 and pipe773 mannualy\n\n")
     if u'bridge773' in netifaces.interfaces() or True:
         create_main_window(sys.argv)
 #     elif subprocess.call("ifconfig bridge773 create".split("" )):
     else:
-        print("ごめんね、、私はそんなに高性能じゃないから、bridge773の設定をしてから再度起動してください。。。")
+        print("Im sorry Im not so credible so please configure network interfaces and ipfw command.")
