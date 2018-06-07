@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.Qt import QPalette
 import subprocess
 from symbol import except_clause
+import random
 
 class EnvChanger(QMainWindow):
     def __init__(self, parent=None,initials=None):
@@ -90,6 +91,7 @@ class EnvChanger(QMainWindow):
         self.add_button = self.put_add_button()
         self.apply_button = self.put_apply_button()
         self.delete_button = self.put_delete_button()
+        self.randomize_button = self.put_randomize_button()
 
         self.env_list_table = QTableWidget(self)
         self.env_list_table.setGeometry(240,25,230,210)
@@ -109,7 +111,7 @@ class EnvChanger(QMainWindow):
         self.env_list_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         # size and title
-        self.setGeometry(220, 220, 490, 280)
+        self.setGeometry(220, 220, 490, 300)
         self.setWindowTitle("")
         self.show()
 
@@ -153,6 +155,7 @@ class EnvChanger(QMainWindow):
                 print("ipfw pipe 773 config "+ cmd[1])
                 subprocess.check_call("ipfw pipe 773 config "+ cmd[1])
                 self.statusBar().showMessage("setting " + cmd[0])
+                self.env_list_table.selectedItems()[0].setBackgraund
 
             else :
                 print("please select environment")
@@ -195,6 +198,21 @@ class EnvChanger(QMainWindow):
         except Exception as e:
             print(e.message)
             qApp.quit()
+
+    def put_randomize_button(self):
+        btn = QPushButton("randomaize", self)
+        btn.setFont(QFont('Serif', 14, QFont.Light))
+        btn.setGeometry(370, 240, 100, 25)
+        btn.setEnabled(True)
+        btn.clicked.connect(self.button_event_randomize)
+        return btn
+
+    def button_event_randomize(self):
+        print()
+        i = 0
+        for k in random.sample(list(self.env_list.keys()),len(self.env_list)):
+            self.env_list_table.setItem(0, i, QTableWidgetItem(str(k)+".  " + str(self.env_list[k])))
+            i = i + 1
 
     def on_env_text_input(self,text):
         if text.isnumeric():
