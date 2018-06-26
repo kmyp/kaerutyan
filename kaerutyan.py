@@ -202,7 +202,7 @@ class EnvChanger(QMainWindow):
     def put_randomize_button(self):
         btn = QPushButton("randomaize", self)
         btn.setFont(QFont('Serif', 14, QFont.Light))
-        btn.setGeometry(370, 240, 100, 25)
+        btn.setGeometry(355, 240, 130, 25)
         btn.setEnabled(True)
         btn.clicked.connect(self.button_event_randomize)
         return btn
