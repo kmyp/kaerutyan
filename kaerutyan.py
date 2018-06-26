@@ -153,9 +153,9 @@ class EnvChanger(QMainWindow):
                 if len(cmd) < 2:
                     raise Exception("cmd error")
                 print("ipfw pipe 773 config "+ cmd[1])
-                subprocess.check_call("ipfw pipe 773 config "+ cmd[1])
+                subprocess.check_call("ipfw pipe 773 config "+ cmd[1],shell=True)
                 self.statusBar().showMessage("setting " + cmd[0])
-                self.env_list_table.selectedItems()[0].setBackgraund
+                self.env_list_table.selectedItems()[0].setBackground(QtGui.QColor(128,220,220))
 
             else :
                 print("please select environment")
