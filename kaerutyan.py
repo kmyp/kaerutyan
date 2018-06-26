@@ -230,7 +230,7 @@ class EnvChanger(QMainWindow):
 
     def on_plr_text_input(self,text):
         if text.isnumeric():
-            self.plr_num = int(text)/100
+            self.plr_num = float(text)/100
         else :
             self.statusBar().showMessage("Invalid input:plr")
             self.plr_num = -1
