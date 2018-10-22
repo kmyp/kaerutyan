@@ -1,6 +1,6 @@
 '''
 Created on 2018/04/25
-last edit 2018/5/22
+last edit 2018/10/23
 @author: kim
 GUI based ipfw controler
 check bridge773
@@ -28,6 +28,10 @@ from PyQt5.Qt import QPalette
 import subprocess
 from symbol import except_clause
 import random
+import datetime as dt
+import traceback
+
+date = dt.datetime.now()
 
 class EnvChanger(QMainWindow):
     def __init__(self, parent=None,initials=None):
@@ -208,11 +212,21 @@ class EnvChanger(QMainWindow):
         return btn
 
     def button_event_randomize(self):
-        print()
         i = 0
-        for k in random.sample(list(self.env_list.keys()),len(self.env_list)):
+        csv_output = []
+        for k in random.sample(list(self.env_list.keys()), len(self.env_list)):
+            csv_output.append(k)
             self.env_list_table.setItem(0, i, QTableWidgetItem(str(k)+".  " + str(self.env_list[k])))
             i = i + 1
+
+        # print(csv_output)
+        try:
+
+            with open("env-list-" + date.strftime("%Y-%m-%d-%H-%M") + ".txt","w") as f :
+                f.write(",".join(map(str, csv_output)) + "\n")
+
+        except:
+            traceback.print_exc()
 
     def on_env_text_input(self,text):
         if text.isnumeric():
