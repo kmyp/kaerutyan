@@ -43,6 +43,7 @@ class EnvChanger(QMainWindow):
         self.env_num = -1
         self.delay_num = -1
         self.plr_num = -1
+        self.subject_id = ""
 
         # Menu Bar
         self.file_menu = self.menuBar().addMenu("&File")
@@ -87,10 +88,15 @@ class EnvChanger(QMainWindow):
         self.qle_id.setFont(QFont("Serif", 16, QFont.Light))
         self.qle_id.textChanged[str].connect(self.on_plr_text_input)
 
-        self.lbl_fname = QLabel(self)
-        self.lbl_fname.setGeometry(165, 135, 240, 30)
-        self.lbl_fname.setFont(QFont("Serif", 14, QFont.Light))
-        self.lbl_fname.setText("%")
+        #subjectID
+        self.lbl_id = QLabel(self)
+        self.lbl_id.setGeometry(20, 230, 200, 30)
+        self.lbl_id.setFont(QFont("Serif", 18, QFont.Light))
+        self.lbl_id.setText("ID:")
+        self.qle_id = QLineEdit(self)
+        self.qle_id.setGeometry(90, 230, 70, 30)
+        self.qle_id.setFont(QFont("Serif", 16, QFont.Light))
+        self.qle_id.textChanged[str].connect(self.on_id_text_input)
 
         self.add_button = self.put_add_button()
         self.apply_button = self.put_apply_button()
@@ -139,7 +145,6 @@ class EnvChanger(QMainWindow):
                 self.env_list_table.setItem(0, i, QTableWidgetItem(str(k)+".  " + str(v)))
                 print(str(v))
                 i = i + 1
-
 
     def put_apply_button(self):
         btn = QPushButton("apply", self)
@@ -222,7 +227,7 @@ class EnvChanger(QMainWindow):
         # print(csv_output)
         try:
 
-            with open("env-list-" + date.strftime("%Y-%m-%d-%H-%M") + ".txt","w") as f :
+            with open("env-list-" + self.subject_id + ".txt","w") as f :
                 f.write(",".join(map(str, csv_output)) + "\n")
 
         except:
@@ -249,6 +254,8 @@ class EnvChanger(QMainWindow):
             self.statusBar().showMessage("Invalid input:plr")
             self.plr_num = -1
 
+    def on_id_text_input(self,text):
+        self.subject_id = text
 
 class SubWindow:
     def __init__(self, parent=None):
