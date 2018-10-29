@@ -8,10 +8,7 @@ if not, won't run
 ###ToDo
 File input output
 implement function about pipe or bridge later
-
-
 ExEnvKaerutyan ver.0.1.0
-
 '''
 import cv2
 import time
@@ -27,6 +24,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.Qt import QPalette
 import subprocess
 from symbol import except_clause
+import random
 
 class EnvChanger(QMainWindow):
     def __init__(self, parent=None,initials=None):
@@ -90,6 +88,7 @@ class EnvChanger(QMainWindow):
         self.add_button = self.put_add_button()
         self.apply_button = self.put_apply_button()
         self.delete_button = self.put_delete_button()
+        self.randomize_button = self.put_randomize_button()
 
         self.env_list_table = QTableWidget(self)
         self.env_list_table.setGeometry(240,25,230,210)
@@ -109,7 +108,7 @@ class EnvChanger(QMainWindow):
         self.env_list_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         # size and title
-        self.setGeometry(220, 220, 490, 280)
+        self.setGeometry(220, 220, 490, 300)
         self.setWindowTitle("")
         self.show()
 
@@ -151,8 +150,9 @@ class EnvChanger(QMainWindow):
                 if len(cmd) < 2:
                     raise Exception("cmd error")
                 print("ipfw pipe 773 config "+ cmd[1])
-                subprocess.check_call("ipfw pipe 773 config "+ cmd[1])
+                subprocess.check_call("ipfw pipe 773 config "+ cmd[1],shell=True)
                 self.statusBar().showMessage("setting " + cmd[0])
+                self.env_list_table.selectedItems()[0].setBackground(QtGui.QColor(128,220,220))
 
             else :
                 print("please select environment")
@@ -196,6 +196,21 @@ class EnvChanger(QMainWindow):
             print(e.message)
             qApp.quit()
 
+    def put_randomize_button(self):
+        btn = QPushButton("randomaize", self)
+        btn.setFont(QFont('Serif', 14, QFont.Light))
+        btn.setGeometry(355, 240, 130, 25)
+        btn.setEnabled(True)
+        btn.clicked.connect(self.button_event_randomize)
+        return btn
+
+    def button_event_randomize(self):
+        print()
+        i = 0
+        for k in random.sample(list(self.env_list.keys()),len(self.env_list)):
+            self.env_list_table.setItem(0, i, QTableWidgetItem(str(k)+".  " + str(self.env_list[k])))
+            i = i + 1
+
     def on_env_text_input(self,text):
         if text.isnumeric():
             self.env_num = int(text)
@@ -212,7 +227,7 @@ class EnvChanger(QMainWindow):
 
     def on_plr_text_input(self,text):
         if text.isnumeric():
-            self.plr_num = int(text)/100
+            self.plr_num = float(text)/100
         else :
             self.statusBar().showMessage("Invalid input:plr")
             self.plr_num = -1
